@@ -1,5 +1,7 @@
 package com.example.myapplication
 
+import android.app.ActivityManager
+import android.content.Context.ACTIVITY_SERVICE
 import android.os.Bundle
 import android.util.Log
 import androidx.activity.ComponentActivity
@@ -7,9 +9,12 @@ import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
@@ -23,14 +28,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
 import kotlin.math.roundToInt
 
+
 class MainActivity : ComponentActivity() {
+    var size = 0
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -43,8 +51,13 @@ class MainActivity : ComponentActivity() {
                         horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                         TextComponent("What If...", 30.sp)
-                        SliderAdvancedExample()
-                        FilledButtonExample(onClick = { Log.d("Filled button", "Filled button clicked.") })
+                        MemoryInfo()
+                        Row(
+                        ) {
+                            FilledButtonExample(onClick = { Log.d("Filled button", "Filled button clicked.") }, "Set Memory")
+                            Spacer(modifier = Modifier.width(48.dp))
+                            FilledButtonExample(onClick = { Log.d("Filled button", "Filled button clicked.") }, "Free Memory")
+                        }
                     }
                 }
             }
@@ -60,27 +73,31 @@ fun TextComponent(name: String, fontSize: TextUnit) {
     )
 }
 
-//@Preview(showBackground = true)
-//@Composable
-//fun GreetingPreview() {
-//    MyApplicationTheme {
-//        Greeting("Android")
-//    }
-//}
-
 @Composable
-fun FilledButtonExample(onClick: () -> Unit) {
-    Button(onClick = { onClick() },
-        modifier = Modifier.size(100.dp, 100.dp),
-        ) {
-        Text("Set Used")
+fun FilledButtonExample(onClick: () -> Unit, text: String) {
+    Button(
+        onClick = { onClick() },
+        modifier = Modifier.size(100.dp, 100.dp)
+    ) {
+        Text(
+            text = text
+        )
     }
 }
 
 @Composable
-fun SliderAdvancedExample() {
+fun MemoryInfo() {
+    // Put this code in the class level ---->
+    val mi = ActivityManager.MemoryInfo()
+    val context = LocalContext.current
+    val activityManager = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
+    activityManager.getMemoryInfo(mi)
+    val freeMemory = mi.availMem / 1048576L
+    val availableMemory = (freeMemory * .8).toLong()
+    //<------
+
     var sliderPosition by remember { mutableFloatStateOf(0f) }
-    var sliderText = "Size: $sliderPosition";
+    var sliderText = "Size: ${sliderPosition.toLong()} / $availableMemory mb";
     Slider(
         value = sliderPosition,
         onValueChange = { sliderPosition = it.roundToInt().toFloat() },
@@ -89,7 +106,7 @@ fun SliderAdvancedExample() {
             activeTrackColor = MaterialTheme.colorScheme.secondary,
             inactiveTrackColor = MaterialTheme.colorScheme.secondaryContainer,
         ),
-        valueRange = 0f..50f,
+        valueRange = 0f..availableMemory.toFloat(),
         modifier = Modifier.padding(top = 64.dp, start = 18.dp, end = 18.dp)
     )
     Text(text = sliderText,
