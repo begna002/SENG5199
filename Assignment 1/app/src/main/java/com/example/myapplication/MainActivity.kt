@@ -170,18 +170,6 @@ class MainActivity (): ComponentActivity() {
         AlertDialogExample("Test", "Currently Adding ${userValue.toInt()} mb...")
     }
 
-    fun freeMemory(context: Context) {
-        val filename = "myfile"
-        val file = File(context.filesDir, filename)
-
-        if (file.exists()) {
-            System.out.println("Deleted!")
-            file.delete();
-            usedSpace = 0
-            setEnabled = false
-        }
-    }
-
     @Composable
     fun AlertDialogExample(
         dialogTitle: String,
@@ -198,6 +186,18 @@ class MainActivity (): ComponentActivity() {
             confirmButton = {},
             dismissButton = {}
         )
+    }
+
+    fun freeMemory(context: Context) {
+        val filename = "myfile"
+        val file = File(context.filesDir, filename)
+
+        if (file.exists()) {
+            System.out.println("Deleted!")
+            file.delete();
+            usedSpace = 0
+            setEnabled = false
+        }
     }
 }
 
