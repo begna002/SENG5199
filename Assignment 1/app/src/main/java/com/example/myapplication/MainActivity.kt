@@ -15,13 +15,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
@@ -31,6 +36,7 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
@@ -86,7 +92,6 @@ class MainActivity (): ComponentActivity() {
         freeMemory(context)
         activityManager.getMemoryInfo(mi)
 
-//        totalAvailableSpace = mi.totalMem / 1048576L
         val availableMem = mi.availMem / 1048576L
 
         usableSpace = (availableMem * .1).toLong()
@@ -103,7 +108,12 @@ class MainActivity (): ComponentActivity() {
     @Composable
     fun FilledButtonExample(clear: Boolean, text: String) {
         val context = LocalContext.current
-        val composableScope = rememberCoroutineScope()
+        var startWrite by remember { mutableStateOf(false) }
+
+        if (startWrite) {
+            UseMemory(context)
+            startWrite = false
+        }
 
         Button(
             enabled = if (clear) true else setEnabled,
@@ -111,8 +121,7 @@ class MainActivity (): ComponentActivity() {
                       if (clear) {
                           freeMemory(context)
                       } else if (userValue > 0){
-                          composableScope.launch { useMemory(context) }
-
+                          startWrite = true
                       }
             },
             modifier = Modifier.size(100.dp, 100.dp)
@@ -146,49 +155,30 @@ class MainActivity (): ComponentActivity() {
         Text(text = "Used Space: $usedSpace / $usableSpace mb",
             modifier = Modifier.padding(bottom = 12.dp))
     }
-
-    suspend fun useMemory(context: Context) {
+    @Composable
+    fun UseMemory(context: Context) {
         val filename = "myfile"
         val file = File(context.filesDir, filename)
-//        var fileLength = file.length()
-        var userValueInBytes = (userValue * 1048576L) + file.length()
+        var userValueInBytes = (userValue * 1048576L)
+        var fileSizeToReach = userValueInBytes + file.length()
 
-        while (file.length() < userValueInBytes) {
-            val fileContents = "Hello world!".repeat(100)
-            context.openFileOutput(filename, Context.MODE_APPEND).use {
-                it.write(fileContents.toByteArray())
-//                it.close()
+        LaunchedEffect(key1 = Unit){
+            while (file.length() < fileSizeToReach) {
+                val fileContents = "Hello world!".repeat(1000)
+                context.openFileOutput(filename, Context.MODE_APPEND).use {
+                    it.write(fileContents.toByteArray())
+                }
+                System.out.println("${file.length()} / ${fileSizeToReach}")
+                usedSpace = file.length() / 1048576L
             }
-            System.out.println("${file.length()} / $userValueInBytes")
-            usedSpace = file.length() / 1048576L
+
+            System.out.println("Added ${file.length() / 1048576L} mb")
+            sliderPosition = 0f
+            userValue = 0f
+            setEnabled = false
         }
 
-        System.out.println("Added ${file.length() / 1048576L} mb")
-        sliderPosition = 0f
-        userValue = 0f
-
-
-//        val fileInputStream = context.openFileInput(filename)
-//        val inputReader = InputStreamReader(fileInputStream)
-//        val output = inputReader.readText()
-//
-//        System.out.println(file.length())
-
-
-//        while (fileLength/1024 < userValue) {
-//            val mi = ActivityManager.MemoryInfo()
-//            val activityManager = context.getSystemService(ACTIVITY_SERVICE) as ActivityManager
-//            activityManager.getMemoryInfo(mi)
-//
-//            val availableMem = mi.availMem / 1048576L
-//
-//            val fileContents = "Hello world!"
-//            context.openFileOutput(filename, Context.MODE_PRIVATE).use {
-//                it.write(fileContents.toByteArray())
-//            }
-//
-//            fileLength = file.length()
-//        }
+        AlertDialogExample("Test", "Currently Adding ${userValue.toInt()} mb...")
     }
 
     fun freeMemory(context: Context) {
@@ -199,7 +189,26 @@ class MainActivity (): ComponentActivity() {
             System.out.println("Deleted!")
             file.delete();
             usedSpace = 0
+            setEnabled = false
         }
+    }
+
+    @Composable
+    fun AlertDialogExample(
+        dialogTitle: String,
+        dialogText: String
+    ) {
+        AlertDialog(
+            title = {
+                Text(text = dialogTitle)
+            },
+            text = {
+                Text(text = dialogText)
+            },
+            onDismissRequest = {},
+            confirmButton = {},
+            dismissButton = {}
+        )
     }
 }
 
