@@ -26,6 +26,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -34,6 +35,7 @@ import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.myapplication.ui.theme.MyApplicationTheme
+import kotlinx.coroutines.launch
 import java.io.File
 import kotlin.math.roundToInt
 
@@ -61,7 +63,7 @@ class MainActivity (): ComponentActivity() {
                         MemorySlider()
                         Row(
                         ) {
-                            FilledButtonExample(false, "Set Memory")
+                            FilledButtonExample(false, "Fill Memory")
                             Spacer(modifier = Modifier.width(48.dp))
                             FilledButtonExample(true, "Free Memory")
                         }
@@ -123,8 +125,11 @@ class MainActivity (): ComponentActivity() {
 
     @Composable
     fun MemorySlider() {
+        var sliderText = "Available: ${sliderPosition.toLong()} mb"
+        var noSpaceLeftText = "Used all the available space!"
 
         Slider(
+            enabled = usedSpace !== usableSpace,
             value = sliderPosition,
             onValueChange = {
                 sliderPosition = it.roundToInt().toFloat()
@@ -139,35 +144,38 @@ class MainActivity (): ComponentActivity() {
             valueRange = 0f..usableSpace.toFloat() - usedSpace.toFloat(),
             modifier = Modifier.padding(top = 64.dp, start = 18.dp, end = 18.dp)
         )
-        Text(text = "Available: ${sliderPosition.toLong()} mb",
+        Text(text = if (usedSpace === usableSpace) noSpaceLeftText else sliderText,
             modifier = Modifier.padding(bottom = 32.dp))
         Text(text = "Used Space: $usedSpace / $usableSpace mb",
             modifier = Modifier.padding(bottom = 12.dp))
     }
     @Composable
     fun UseMemory(context: Context) {
+        val composableScope = rememberCoroutineScope()
+
         val filename = "myfile"
         val file = File(context.filesDir, filename)
         var userValueInBytes = (userValue * 1048576L)
         var fileSizeToReach = userValueInBytes + file.length()
 
         LaunchedEffect(key1 = Unit){
-            while (file.length() < fileSizeToReach) {
-                val fileContents = "Hello world!".repeat(1000)
-                context.openFileOutput(filename, Context.MODE_APPEND).use {
-                    it.write(fileContents.toByteArray())
+            composableScope.launch {
+                while (file.length() < fileSizeToReach) {
+                    val fileContents = "Hello world!".repeat(1000)
+                    context.openFileOutput(filename, Context.MODE_APPEND).use {
+                        it.write(fileContents.toByteArray())
+                    }
+                    usedSpace = file.length() / 1048576L
                 }
-                System.out.println("${file.length()} / ${fileSizeToReach}")
-                usedSpace = file.length() / 1048576L
-            }
 
-            System.out.println("Added ${file.length() / 1048576L} mb")
-            sliderPosition = 0f
-            userValue = 0f
-            setEnabled = false
+                System.out.println("Added ${file.length() / 1048576L} mb")
+                sliderPosition = 0f
+                userValue = 0f
+                setEnabled = false
+            }
         }
 
-        AlertDialogExample("Test", "Currently Adding ${userValue.toInt()} mb...")
+        AlertDialogExample("Test", "Currently Adding ${userValue.toInt()} mb \nPlease Wait...")
     }
 
     @Composable
