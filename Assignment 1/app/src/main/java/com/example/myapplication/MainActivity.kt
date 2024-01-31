@@ -175,7 +175,7 @@ class MainActivity (): ComponentActivity() {
             }
         }
 
-        AlertDialogExample("Test", "Currently Adding ${userValue.toInt()} mb \nPlease Wait...")
+        AlertDialogExample("Currently Adding ${userValue.toInt()} mb", "Please wait...")
     }
 
     @Composable
