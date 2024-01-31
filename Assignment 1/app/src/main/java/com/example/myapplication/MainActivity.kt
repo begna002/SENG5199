@@ -165,10 +165,10 @@ class MainActivity (): ComponentActivity() {
                     context.openFileOutput(filename, Context.MODE_APPEND).use {
                         it.write(fileContents.toByteArray())
                     }
-                    usedSpace = file.length() / 1048576L
                 }
 
-                System.out.println("Added ${file.length() / 1048576L} mb")
+                System.out.println("Used Space: ${file.length() / 1048576L} mb")
+                usedSpace = file.length() / 1048576L
                 sliderPosition = 0f
                 userValue = 0f
                 setEnabled = false
