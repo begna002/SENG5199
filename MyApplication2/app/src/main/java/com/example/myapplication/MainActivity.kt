@@ -145,8 +145,6 @@ class MainActivity (): ComponentActivity() {
             modifier = Modifier.padding(bottom = 32.dp))
         Text(text = "Used Space: $usedSpace / $usableSpace mb",
             modifier = Modifier.padding(bottom = 12.dp))
-//        Text(text = "Actual Total Space: $totalAvailableSpace mb",
-//            modifier = Modifier.padding(bottom = 64.dp))
     }
 
     suspend fun useMemory(context: Context) {
