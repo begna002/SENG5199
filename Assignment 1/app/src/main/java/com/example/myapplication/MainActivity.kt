@@ -48,6 +48,7 @@ class MainActivity (): ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
+            GetMemoryInfo()
             MyApplicationTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
@@ -57,8 +58,7 @@ class MainActivity (): ComponentActivity() {
                         horizontalAlignment = Alignment.CenterHorizontally
                         ) {
                         TextComponent("What If...", 30.sp)
-                        GetMemoryInfo()
-                        MemoryInfo()
+                        MemorySlider()
                         Row(
                         ) {
                             FilledButtonExample(false, "Set Memory")
@@ -122,7 +122,7 @@ class MainActivity (): ComponentActivity() {
     }
 
     @Composable
-    fun MemoryInfo() {
+    fun MemorySlider() {
 
         Slider(
             value = sliderPosition,
